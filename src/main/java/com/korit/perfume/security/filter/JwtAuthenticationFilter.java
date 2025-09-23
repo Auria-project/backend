@@ -4,11 +4,10 @@ import com.korit.perfume.entity.User;
 import com.korit.perfume.repository.UserRepository;
 import com.korit.perfume.security.jwt.JwtUtils;
 import com.korit.perfume.security.model.PrincipalUser;
-import io.jsonwebtoken.Claims;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -30,6 +29,8 @@ public class JwtAuthenticationFilter implements Filter {
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
+        HttpServletResponse response = (HttpServletResponse) servletResponse;
+
         List<String> methods = List.of("POST", "GET", "PUT", "PATCH", "DELETE");
         if (!methods.contains(request.getMethod())) {
             filterChain.doFilter(servletRequest, servletResponse);
@@ -37,36 +38,48 @@ public class JwtAuthenticationFilter implements Filter {
         }
 
         String authorization = request.getHeader("Authorization");
-        System.out.println(authorization);
-        if (jwtUtils.isBearer(authorization)) {
-            String accessToken = jwtUtils.removeBearer(authorization);
+        System.out.println("Authorization header: " + authorization);
 
-            try {
-                Claims claims = jwtUtils.getClaims(accessToken);
-                String id = claims.getId();
-                Integer userId = Integer.parseInt(id);
-                Optional<User> optionalUser = userRepository.getUserByUserId(userId);
-                optionalUser.ifPresentOrElse((user) -> {
-                    PrincipalUser principalUser = PrincipalUser.builder()
-                            .userId(user.getUserId())
-                            .username(user.getUsername())
-                            .nickname(user.getNickname())
-                            .password(user.getPassword())
-                            .email(user.getEmail())
-                            .userRoles(user.getUserRoles())
-                            .build();
-
-                    Authentication authentication = new UsernamePasswordAuthenticationToken(principalUser, "", principalUser.getAuthorities());
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-
-                }, () -> {
-                    throw new AuthenticationServiceException("인증 실패");
-                });
-            } catch (RuntimeException e) {
-                e.printStackTrace();
-            }
+        if (authorization == null || !jwtUtils.isBearer(authorization)) {
+            // 인증 헤더 없으면 인증이 필요한 경로는 Security 설정에서 처리하므로 넘어감
+            filterChain.doFilter(servletRequest, servletResponse);
+            return;
         }
 
-        filterChain.doFilter(servletRequest, servletResponse);
+        String accessToken = jwtUtils.removeBearer(authorization);
+
+        try {
+            // 토큰에서 클레임 추출
+            var claims = jwtUtils.getClaims(accessToken);
+            String id = claims.getId();
+            Integer userId = Integer.parseInt(id);
+
+            Optional<User> optionalUser = userRepository.getUserByUserId(userId);
+            if (optionalUser.isPresent()) {
+                User user = optionalUser.get();
+
+                PrincipalUser principalUser = PrincipalUser.builder()
+                        .userId(user.getUserId())
+                        .username(user.getUsername())
+                        .nickname(user.getNickname())
+                        .password(user.getPassword())
+                        .email(user.getEmail())
+                        .userRoles(user.getUserRoles())
+                        .build();
+
+                Authentication authentication = new UsernamePasswordAuthenticationToken(principalUser, "", principalUser.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                filterChain.doFilter(servletRequest, servletResponse);
+            } else {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"status\":\"fail\",\"message\":\"인증 실패: 사용자 정보를 찾을 수 없습니다.\"}");
+            }
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"status\":\"fail\",\"message\":\"토큰이 유효하지 않거나 만료되었습니다.\"}");
+        }
     }
 }
