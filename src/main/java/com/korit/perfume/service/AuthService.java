@@ -43,7 +43,7 @@ public class AuthService {
             return new ApiRespDto<>("failed", "이미 사용 중인 이메일입니다.", null);
         }
 
-        Optional<User> userByNickname = userRepository.getUserByNickname(signupReqDto.getUsernickname());
+        Optional<User> userByNickname = userRepository.getUserByNickname(signupReqDto.getNickname());
         if (userByNickname.isPresent()) {
             return new ApiRespDto<>("failed", "이미 사용 중인 닉네임입니다.", null);
         }

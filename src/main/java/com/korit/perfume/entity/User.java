@@ -20,6 +20,9 @@ public class User {
     private String password;
     private String email;
 
+    private String gender;
+    private Integer age;
+
     private LocalDateTime createDt;
     private LocalDateTime updateDt;
 

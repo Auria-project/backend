@@ -6,6 +6,6 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class SigninReqDto {
-    private String userid;
+    private String username;
     private String password;
 }

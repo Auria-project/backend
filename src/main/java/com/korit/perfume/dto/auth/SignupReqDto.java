@@ -10,12 +10,14 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SignupReqDto {
-
     private String fullName;
     private String username;
     private String nickname;
     private String email;
     private String password;
+
+    private String gender;
+    private Integer age;
 
     public User toEntity(BCryptPasswordEncoder bCryptPasswordEncoder) {
         return User.builder()

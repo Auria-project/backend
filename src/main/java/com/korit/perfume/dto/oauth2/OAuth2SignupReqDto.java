@@ -3,6 +3,7 @@ package com.korit.perfume.dto.oauth2;
 import com.korit.perfume.entity.OAuth2User;
 import com.korit.perfume.entity.User;
 import lombok.Data;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Data
 public class OAuth2SignupReqDto {
@@ -27,7 +28,6 @@ public class OAuth2SignupReqDto {
                 .userId(userId)
                 .provider(provider)
                 .providerUserId(providerUserId)
-                .nickname(nickname)
                 .build();
     }
 }

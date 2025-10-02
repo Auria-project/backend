@@ -17,6 +17,9 @@ public class SignupReqDto {
     private String email;      // 이메일 주소
     private String password;   // 비밀번호
 
+    private String gender;  // 성별
+    private Integer age;    // 나이
+
     public User toEntity(BCryptPasswordEncoder bCryptPasswordEncoder) {
         return User.builder()
                 .fullname(this.fullName)

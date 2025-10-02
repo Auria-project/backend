@@ -13,6 +13,8 @@ public interface UserMapper {
     Optional<User> getUserByfullname(String fullname);
     Optional<User> getUserByEmail(String email);
     Optional<User> getUserByNickname(String nickname);
+    Optional<User> getUserByGender(String gender);
+    Optional<User> getUserByAge(Integer age);
 
     int updatePassword(User user);
     int updateProfileImg(User user);

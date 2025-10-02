@@ -23,6 +23,11 @@ public class UserRepository {
         return Optional.of(user);
     }
 
+    public User save(User user) {
+        userMapper.addUser(user);
+        return user;
+    }
+
     public Optional<User> getUserByUserId(Integer userId) {
         return userMapper.getUserByUserId(userId);
     }
@@ -42,7 +47,6 @@ public class UserRepository {
     public int changePassword(User user) {
         return userMapper.updatePassword(user);
     }
-
 
     public int changeNickname(User user) {
         return userMapper.updateNickname(user);

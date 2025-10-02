@@ -7,7 +7,6 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class ChangeNicknameReqDto {
-
     private Integer userId;
     private String nickname;
 
